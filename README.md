@@ -2,13 +2,13 @@
 
 Ce projet a été réalisé dans le cadre de l'UE **LU3IN025** à **Sorbonne Université**. Il porte sur la résolution d'un problème d'affectation des étudiants dans les différents parcours du Master Informatique en utilisant des algorithmes d'appariement stable et de l'optimisation mathématique.
 
-## 📝 Contexte du Projet
+## Contexte du Projet
 L'objectif est d'automatiser et d'optimiser l'affectation de $n$ étudiants vers $m=10$ parcours de master spécialisés :
 * **IA2D, BIM, CCA, IMA, MIND, QI, RES, SAR, SESI, STL**.
 
 Le système s'appuie sur les vœux exprimés par les étudiants et les classements établis par les responsables de parcours.
 
-## 🚀 Fonctionnalités Principales
+## Fonctionnalités Principales
 
 ### 1. Algorithme de Gale-Shapley
 Implémentation complète en **Python** de l'algorithme de Gale-Shapley adapté au problème des hôpitaux (plusieurs places par parcours) :
