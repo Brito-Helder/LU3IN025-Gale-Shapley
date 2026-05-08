@@ -1,5 +1,6 @@
 \documentclass{article}
 
+\usepackage{graphicx}
 \usepackage[utf8]{inputenc} 
 \usepackage{amsmath}        
 \usepackage{array}
@@ -12,9 +13,83 @@
 
 \begin{document}
 
+\thispagestyle{plain} 
+\begin{titlepage} 
+    \begin{center} 
+        \bigskip 
+        \includegraphics[scale=0.5]{logo_su.jpg}~\\[4cm] 
+        {\LARGE Rapport du mini-projet LU3IN025}\\[0.3cm] 
+        \rule{\linewidth}{0.5mm} \\[0.6cm] 
+        {\huge \textbf{Affectation des étudiants en Master Informatique}}
+        \rule{\linewidth}{0.5mm} \\[1cm] 
+        {\Large Helder Brito (21304177) et O'nel Hounnouvi (21315612) }
+        \vfill Avril 2026 -- Mai 2026
+    \end{center} 
+\end{titlepage}
+
+\newpage
+
+\section{Problème et affectation}
+
+\section{Évolution du temps de calcul}
+
+\section{Équité et PL(NE)}
+% Question 3.1
+\subsection{PLNE permettant de déterminer une affectation qui maximise l’utilité minimale des étudiants.}
+
 \begin{table}[htbp]
   \centering
-  \caption{Matrice des utilités totales $u_p(e) + u_e(p)$}
+  \renewcommand{\arraystretch}{1.2} % Pour éviter l'effet "collé"
+  \caption{Matrice $(u_{e_i}(p_j))_{i,j}$ des utilités des étudiants}
+  \vspace{8pt}
+  \label{tab:matrice_utilites_etu}
+  
+  \begin{tabular}{c | cccccccccc}
+    \toprule
+    \multirow{2}{*}{Etudiants} & \multicolumn{10}{c}{Parcours} \\
+    \cmidrule(lr){2-11}
+       & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\
+    \midrule
+    0  & 2 & 1 & 3 & 4 & 0 & 9 & 6 & 7 & 5 & 8 \\
+    1  & 7 & 0 & 4 & 1 & 6 & 8 & 9 & 5 & 2 & 3 \\
+    2  & 8 & 2 & 6 & 3 & 9 & 0 & 1 & 7 & 4 & 5 \\
+    3  & 5 & 1 & 0 & 2 & 3 & 7 & 8 & 6 & 4 & 9 \\
+    4  & 4 & 9 & 3 & 0 & 2 & 5 & 8 & 6 & 1 & 7 \\
+    5  & 9 & 2 & 5 & 3 & 6 & 0 & 1 & 7 & 4 & 8 \\
+    6  & 3 & 2 & 6 & 4 & 0 & 9 & 7 & 8 & 5 & 1 \\
+    7  & 8 & 2 & 6 & 4 & 7 & 0 & 1 & 9 & 5 & 3 \\
+    8  & 3 & 2 & 6 & 4 & 1 & 9 & 7 & 8 & 5 & 0 \\
+    9  & 0 & 3 & 9 & 4 & 2 & 7 & 8 & 1 & 5 & 6 \\
+    10 & 7 & 4 & 1 & 5 & 8 & 3 & 9 & 0 & 6 & 2 \\
+    11 & 0 & 9 & 5 & 4 & 8 & 3 & 2 & 6 & 1 & 7 \\
+    12 & 9 & 1 & 3 & 4 & 0 & 2 & 7 & 6 & 5 & 8 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent\textbf{Modélisation de la recherche de l'affectation maximisant l'utilité minimale des étudiants}
+
+\vspace{0.3cm}
+\noindent\textbf{Variables:} Pour tout étudiant $i \in \{0,\dots,12\}$ et tout parcours $j \in \{0,\dots,13\}$, on définit la variable $x_{ij}$ telle que $x_{ij} = 1$ si l'étudiant $e_i$ est affecté au parcours $p_j$ et $x_{ij} = 0$ sinon.
+
+\vspace{0.3cm}
+\noindent\textbf{Fonction objectif :} 
+\[ \max \left( \min_{i \in \{0,\dots,12\}} \sum_{j=0}^{13} x_{ij} u_{e_i}(p_j) \right) \]
+
+\noindent\textbf{Contraintes:}
+\begin{align*}
+& \sum_{j=0}^{13} x_{ij} = 1, && \forall i \in \{0,\dots,12\} && \text{(chaque étudiant est affecté à un seul parcours)} \\
+& \sum_{i=0}^{12} x_{ij} \leq c_j, && \forall j \in \{0,\dots,13\} && \text{(la capacité $c_j$ de chaque parcours est respectée)} \\
+& x_{ij} \in \{0, 1\}, && \forall i, j && \text{(domaine des variables)}
+\end{align*}
+
+
+
+\subsection{PLNE permettant de trouver une solution qui maximise la somme des utilités (étudiants et parcours)}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Matrice \((U_{ij})_{i,j}\) des utilités totales $u_{e_i}(p_j) + u_{p_j}(e_i)$}
   \label{tab:matrice_utilites}
   
   \begin{tabular}{c | cccccccccc}
@@ -43,17 +118,21 @@
 \noindent\textbf{Modélisation de la recherche de l'affectation maximisant l'utilité totale (efficacité)}
 
 \vspace{0.3cm}
-\noindent\textbf{Variables:} Pour tout étudiant $i \in \{1,\dots,n\}$ et tout parcours $j \in \{1,\dots,m\}$, on définit la variable $x_{ij}$ telle que $x_{ij} = 1$ si l'étudiant $e_i$ est affecté au parcours $p_j$ et $x_{ij} = 0$ sinon.
+\noindent\textbf{Variables:} Pour tout étudiant $i \in \{0,\dots,12\}$ et tout parcours $j \in \{0,\dots,13\}$, on définit la variable $x_{ij}$ telle que $x_{ij} = 1$ si l'étudiant $e_i$ est affecté au parcours $p_j$ et $x_{ij} = 0$ sinon.
 
 \vspace{0.3cm}
 \noindent\textbf{Fonction objectif :} 
-\[ \max \sum_{i=1}^{n} \sum_{j=1}^{m} x_{ij}\left(u_{e_i}(p_j) + u_{p_j}(e_i)\right) \]
+\[ \max \sum_{i=0}^{12} \sum_{j=0}^{13} x_{ij}\left(u_{e_i}(p_j) + u_{p_j}(e_i)\right) \]
 
 \noindent\textbf{Contraintes:}
 \begin{align*}
-& \sum_{j=1}^{m} x_{ij} = 1, && \forall i \in \{1,\dots,n\} && \text{(chaque étudiant est affecté à un seul parcours)} \\
-& \sum_{i=1}^{n} x_{ij} \leq c_j, && \forall j \in \{1,\dots,m\} && \text{(la capacité $c_j$ de chaque parcours est respectée)} \\
+& \sum_{j=0}^{13} x_{ij} = 1, && \forall i \in \{0,\dots,12\} && \text{(chaque étudiant est affecté à un seul parcours)} \\
+& \sum_{i=0}^{12} x_{ij} \leq c_j, && \forall j \in \{0,\dots,13\} && \text{(la capacité $c_j$ de chaque parcours est respectée)} \\
 & x_{ij} \in \{0, 1\}, && \forall i, j && \text{(domaine des variables)}
 \end{align*}
+
+
+\subsection{PLNE maximisant la somme des utilités (étudiants
+et parcours) parmi les affectations où chaque étudiant a un de ses k premiers choix (pour un k fixé)}
 
 \end{document}
