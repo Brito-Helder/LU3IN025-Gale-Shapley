@@ -2,27 +2,58 @@
 
 \usepackage[utf8]{inputenc} 
 \usepackage{amsmath}        
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{geometry}
+\usepackage{caption}
+\geometry{a4paper, margin=1in}
+
 
 \begin{document}
 
-\[
-\begin{array}{c|cccccccccc}
-  & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\
-\hline
-0  & 2 & 1 & 3 & 4 & 0 & 9 & 6 & 7 & 5 & 8 \\
-1  & 7 & 0 & 4 & 1 & 6 & 8 & 9 & 5 & 2 & 3 \\
-2  & 8 & 2 & 6 & 3 & 9 & 0 & 1 & 7 & 4 & 5 \\
-3  & 5 & 1 & 0 & 2 & 3 & 7 & 8 & 6 & 4 & 9 \\
-4  & 4 & 9 & 3 & 0 & 2 & 5 & 8 & 6 & 1 & 7 \\
-5  & 9 & 2 & 5 & 3 & 6 & 0 & 1 & 7 & 4 & 8 \\
-6  & 3 & 2 & 6 & 4 & 0 & 9 & 7 & 8 & 5 & 1 \\
-7  & 8 & 2 & 6 & 4 & 7 & 0 & 1 & 9 & 5 & 3 \\
-8  & 3 & 2 & 6 & 4 & 1 & 9 & 7 & 8 & 5 & 0 \\
-9  & 0 & 3 & 9 & 4 & 2 & 7 & 8 & 1 & 5 & 6 \\
-10 & 7 & 4 & 1 & 5 & 8 & 3 & 9 & 0 & 6 & 2 \\
-11 & 0 & 9 & 5 & 4 & 8 & 3 & 2 & 6 & 1 & 7 \\
-12 & 9 & 1 & 3 & 4 & 0 & 2 & 7 & 6 & 5 & 8 \\
-\end{array}
-\]
+\begin{table}[htbp]
+  \centering
+  \caption{Matrice des utilités totales $u_p(e) + u_e(p)$}
+  \label{tab:matrice_utilites}
+  
+  \begin{tabular}{c | cccccccccc}
+    \toprule
+    \multirow{2}{*}{Etudiants} & \multicolumn{10}{c}{Parcours} \\
+    \cmidrule(lr){2-11}
+       & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\
+    \midrule
+    0  & 6 & 5 & 6 & 9 & 10 & 20 & 18 & 10 & 16 & 12 \\
+    1  & 12 & 6 & 8 & 7 & 7 & 20 & 19 & 9 & 14 & 8 \\
+    2  & 8 & 2 & 6 & 3 & 9 & 5 & 4 & 7 & 9 & 5 \\
+    3  & 12 & 8 & 12 & 9 & 14 & 17 & 17 & 11 & 14 & 16 \\
+    4  & 12 & 17 & 10 & 8 & 9 & 14 & 15 & 13 & 10 & 8 \\
+    5  & 18 & 12 & 13 & 12 & 12 & 8 & 7 & 15 & 12 & 17 \\
+    6  & 5 & 3 & 11 & 8 & 5 & 16 & 12 & 19 & 12 & 3 \\
+    7  & 20 & 13 & 12 & 15 & 11 & 6 & 5 & 21 & 11 & 14 \\
+    8  & 4 & 4 & 7 & 5 & 4 & 9 & 9 & 9 & 6 & 8 \\
+    9  & 11 & 12 & 19 & 14 & 4 & 10 & 8 & 10 & 9 & 18 \\
+    10 & 10 & 7 & 3 & 8 & 20 & 5 & 10 & 2 & 8 & 5 \\
+    11 & 10 & 14 & 16 & 16 & 16 & 7 & 13 & 12 & 1 & 17 \\
+    12 & 15 & 13 & 12 & 6 & 9 & 3 & 15 & 16 & 8 & 14 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent\textbf{Modélisation de la recherche de l'affectation maximisant l'utilité totale (efficacité)}
+
+\vspace{0.3cm}
+\noindent\textbf{Variables:} Pour tout étudiant $i \in \{1,\dots,n\}$ et tout parcours $j \in \{1,\dots,m\}$, on définit la variable $x_{ij}$ telle que $x_{ij} = 1$ si l'étudiant $e_i$ est affecté au parcours $p_j$ et $x_{ij} = 0$ sinon.
+
+\vspace{0.3cm}
+\noindent\textbf{Fonction objectif :} 
+\[ \max \sum_{i=1}^{n} \sum_{j=1}^{m} x_{ij}\left(u_{e_i}(p_j) + u_{p_j}(e_i)\right) \]
+
+\noindent\textbf{Contraintes:}
+\begin{align*}
+& \sum_{j=1}^{m} x_{ij} = 1, && \forall i \in \{1,\dots,n\} && \text{(chaque étudiant est affecté à un seul parcours)} \\
+& \sum_{i=1}^{n} x_{ij} \leq c_j, && \forall j \in \{1,\dots,m\} && \text{(la capacité $c_j$ de chaque parcours est respectée)} \\
+& x_{ij} \in \{0, 1\}, && \forall i, j && \text{(domaine des variables)}
+\end{align*}
 
 \end{document}

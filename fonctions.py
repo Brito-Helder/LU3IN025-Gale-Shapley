@@ -112,7 +112,7 @@ def gale_shapley(PrefEtu, PrefSpe, classement, capacites):
     return affectations_propres
 
 
-def gale_shapley(PrefEtu, PrefSpe, classement, capacites):
+def gale_shapley_cote_parcours(PrefEtu, PrefSpe, classement, capacites):
     """Applique l'algorithme de Gale-Shapley côté parcours"""
     return
 
@@ -128,7 +128,7 @@ def liste_paires_instables(PrefEtu, classement, capacites, affectations):
         for etu in liste_etus:
             master_etu[etu] = master
 
-    # Vérifier pour chaque étudiant
+    #Vérifier pour chaque étudiant
     for etu in range(nb_etu):
         master_actuel = master_etu[etu]
         for master_prefere in PrefEtu[etu]:
@@ -161,3 +161,8 @@ def matrice_utilites(MatricePref):
             l = MatricePref[i][j]
             matrice[i][l] = m - j -1
     return matrice
+
+def matrice_utilites_totale(PrefEtu, PrefSpe):
+    U_etu = matrice_utilites(PrefEtu)
+    U_spe = matrice_utilites(PrefSpe)
+    return U_etu + U_spe.T
