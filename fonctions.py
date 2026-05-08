@@ -59,7 +59,8 @@ def lecture_PrefSpe(file):
 def gale_shapley_cote_etudiant(PrefEtu, PrefSpe, classement, capacites):
     nb_etu = PrefEtu.shape[0]
     nb_parcours = PrefSpe.shape[0]
-
+    nb_iterations = 0
+    
     # 1. TROUVER UN ÉTUDIANT LIBRE : File (FIFO, deque) pour extraire en O(1)
     etu_libres = deque(range(nb_etu))
 
@@ -70,6 +71,7 @@ def gale_shapley_cote_etudiant(PrefEtu, PrefSpe, classement, capacites):
     AFFECTATIONS = {i: [] for i in range(nb_parcours)}
 
     while len(etu_libres) != 0:
+        nb_iterations  += 1
         etu = etu_libres.popleft()
 
         if prochain_voeu[etu] >= len(PrefEtu[etu]):
@@ -111,14 +113,15 @@ def gale_shapley_cote_etudiant(PrefEtu, PrefSpe, classement, capacites):
     for parcours, tas in AFFECTATIONS.items():
         affectations_propres[parcours] = [etu_id for _, etu_id in tas]
 
-    return affectations_propres
+    return affectations_propres, nb_iterations  
 
 
 def gale_shapley_cote_parcours(PrefEtu, PrefSpe, classement_etu, capacites):
     """Applique l'algorithme de Gale-Shapley côté parcours (les masters proposent)"""
     nb_etu = len(PrefEtu)
     nb_parcours = len(PrefSpe)
-
+    nb_iterations = 0
+    
     # 1. File des parcours qui ont encore des places libres à proposer
     parcours_libres = deque(range(nb_parcours))
 
@@ -133,6 +136,7 @@ def gale_shapley_cote_parcours(PrefEtu, PrefSpe, classement_etu, capacites):
 
     while len(parcours_libres) != 0:
         parcours = parcours_libres.popleft()
+        nb_iterations += 1
 
         # Si le parcours a fait une offre à TOUS les étudiants de sa liste, il abandonne
         if prochain_voeu[parcours] >= len(PrefSpe[parcours]):
@@ -180,7 +184,7 @@ def gale_shapley_cote_parcours(PrefEtu, PrefSpe, classement_etu, capacites):
         if master != -1:
             affectations_propres[master].append(etu)
 
-    return affectations_propres
+    return affectations_propres, nb_iterations
 
 
 

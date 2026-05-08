@@ -1,4 +1,5 @@
 import time
+import os
 import matplotlib.pyplot as plt
 from fonctions import *
 
@@ -35,6 +36,7 @@ def tracer_courbe(type):
     if type != "cote_etudiant" and type != "cote_parcours":
         print("Type de courbe inconnu. Veuillez choisir 'cote_etudiant' ou 'cote_parcours'.")
         return
+    
     nb_tests = 20
     temps_moyens = []
     valeurs_n = list(range(200, 2201, 200))
@@ -68,7 +70,55 @@ def tracer_courbe(type):
     plt.xlabel("Nombre d'étudiants (n)")
     plt.ylabel("Temps moyen d'exécution (secondes)")
     plt.grid(True)
-    plt.savefig(f"temps_moyens_{type}.png")
+    
+    if not os.path.exists("Graphiques"):
+        os.makedirs("Graphiques")
+
+    plt.savefig(os.path.join("Graphiques", f"temps_moyens_{type}.png"))
+
+    
+    # Affiche le graphique à l'écran
+    plt.show()
+    
+def tracer_courbe_iterations(type): 
+    if type != "cote_etudiant" and type != "cote_parcours":
+        print("Type de courbe inconnu. Veuillez choisir 'cote_etudiant' ou 'cote_parcours'.")
+        return
+    
+    nb_tests = 50
+    iterations_moyennes = []
+    valeurs_n = list(range(200, 2201, 200))
+    for n in valeurs_n:
+        print(f"tracer_courbe: {n}")
+        capacites = generer_capacites_deterministes(n)
+        iterations_total = 0 
+        for test in range(nb_tests):
+            # Chargement des données de test
+            PrefEtu, classement_etu = generer_matrice_prefEtu(n)
+            PrefSpe, classement_parcours = generer_matrice_prefSpe(n)
+
+            # Mesure du temps de calcul
+            if type == "cote_etudiant":
+                _, iterations = gale_shapley_cote_etudiant(PrefEtu, PrefSpe, classement_parcours, capacites)
+            else:   
+                _, iterations = gale_shapley_cote_parcours(PrefEtu, PrefSpe, classement_etu, capacites)
+            iterations_total += iterations
+
+        mean_iterations = iterations_total / nb_tests
+        iterations_moyennes.append(mean_iterations)
+
+    # Tracé de la courbe
+    plt.figure()
+    plt.plot(valeurs_n, iterations_moyennes, marker='o')
+
+    plt.title(f"Nombre d'itérations de Gale_Shapley_{type} en fonction du nombre n d'étudiants (n)")
+    plt.xlabel("Nombre d'étudiants (n)")
+    plt.ylabel("Nombre moyen d'itérations")
+    plt.grid(True)
+    if not os.path.exists("Graphiques"):
+        os.makedirs("Graphiques")
+
+    plt.savefig(os.path.join("Graphiques", f"iterations_moyennes_{type}.png"))
     
     # Affiche le graphique à l'écran
     plt.show()
@@ -77,4 +127,8 @@ if __name__ == "__main__":
     tracer_courbe("cote_etudiant")
     tracer_courbe("cote_parcours")
     tracer_courbe("test")
+    
+    #tracer_courbe_iterations("cote_etudiant")
+    #tracer_courbe_iterations("cote_parcours")
+    #tracer_courbe_iterations("test")
     
