@@ -5,14 +5,16 @@ import heapq
 
 def lecture_PrefEtu(file):
     """Lit PrefEtu.txt et retourne une matrice contenant le classement des parcours selon les préférences des étudiants"""
-    fic = open(file, "r")
+    fic = open(file, "r", encoding="utf-8-sig")
     contenu = fic.readlines()
     fic.close()
-
-    nbEtu = int(contenu[0][1:3])
+    
+    contenu[0]=contenu[0].split()
+    nbEtu = int(contenu[0][0])
     nbParcours = 10
 
     matrice = np.zeros((nbEtu, nbParcours), dtype=int)
+    classement = np.zeros((nbEtu, nbParcours), dtype=int)
 
     for i in range(1,nbEtu+1):
         ligne = contenu[i].split()
@@ -21,13 +23,14 @@ def lecture_PrefEtu(file):
         for rang, j in enumerate(ligne[2:]):
             id_parcours = int(j)
             matrice[id_etu][rang] = id_parcours
-
-    return matrice
+            classement[id_etu][id_parcours] = rang
+            
+    return matrice, classement
 
 
 def lecture_PrefSpe(file):
     """Lit PrefSpe.txt et retourne une matrice contenant le classement des étudiants selon les préférences des parcours"""
-    fic = open(file, "r")
+    fic = open(file, "r", encoding="utf-8-sig")
     contenu = fic.readlines()
     fic.close()
 
@@ -53,14 +56,14 @@ def lecture_PrefSpe(file):
     return capacites, matrice, classement
 
 
-def gale_shapley(PrefEtu, PrefSpe, classement, capacites):
+def gale_shapley_cote_etudiant(PrefEtu, PrefSpe, classement, capacites):
     nb_etu = PrefEtu.shape[0]
     nb_parcours = PrefSpe.shape[0]
 
     # 1. TROUVER UN ÉTUDIANT LIBRE : File (FIFO, deque) pour extraire en O(1)
     etu_libres = deque(range(nb_etu))
 
-    # 2. PROCHAIN PARCOURS AUQUEL FAIRE UNE PROPOSITION : Tableau de pointeurs pour avancer en O(1) sans détruire PrefEtu
+    # 2. PROCHAIN PARCOURS AUQUEL FAIRE UNE PROPOSITION : Tableau pour avancer en O(1) dans les préférences sans détruire PrefEtu
     prochain_voeu = [0] * nb_etu
 
     # Les affectations utiliseront des "Tas" (Heaps) pour chaque parcours
@@ -79,7 +82,6 @@ def gale_shapley(PrefEtu, PrefSpe, classement, capacites):
         # 3. POSITION DE L'ÉTUDIANT DANS UN PARCOURS : O(1)
         rang_etu = classement[next_parcours][etu]
 
-        # L'ASTUCE DU TAS : heapq est un Min-Heap (le plus petit est au sommet).
         # En insérant un rang négatif, le pire rang (plus grand nombre) sera toujours le plus "petit", donc placé à la racine du tas !
         candidat = (-rang_etu, etu)
 
@@ -112,9 +114,74 @@ def gale_shapley(PrefEtu, PrefSpe, classement, capacites):
     return affectations_propres
 
 
-def gale_shapley_cote_parcours(PrefEtu, PrefSpe, classement, capacites):
-    """Applique l'algorithme de Gale-Shapley côté parcours"""
-    return
+def gale_shapley_cote_parcours(PrefEtu, PrefSpe, classement_etu, capacites):
+    """Applique l'algorithme de Gale-Shapley côté parcours (les masters proposent)"""
+    nb_etu = len(PrefEtu)
+    nb_parcours = len(PrefSpe)
+
+    # 1. File des parcours qui ont encore des places libres à proposer
+    parcours_libres = deque(range(nb_parcours))
+
+    # Pointeur sur le prochain étudiant à qui le parcours va faire une offre
+    prochain_voeu = [0] * nb_parcours
+    
+    # Nombre d'étudiants actuellement affectés à chaque parcours
+    places_prises = [0] * nb_parcours
+
+    # État des étudiants : quel est leur parcours actuel (-1 si aucun)
+    affectation_etu = [-1] * nb_etu
+
+    while len(parcours_libres) != 0:
+        parcours = parcours_libres.popleft()
+
+        # Si le parcours a fait une offre à TOUS les étudiants de sa liste, il abandonne
+        if prochain_voeu[parcours] >= len(PrefSpe[parcours]):
+            continue
+
+        # L'étudiant à qui le master va proposer
+        etu = PrefSpe[parcours][prochain_voeu[parcours]]
+        prochain_voeu[parcours] += 1
+
+        # Cas A : L'étudiant est libre
+        if affectation_etu[etu] == -1:
+            affectation_etu[etu] = parcours
+            places_prises[parcours] += 1
+        
+        # Cas B : L'étudiant a déjà un parcours, il va comparer
+        else:
+            parcours_actuel = affectation_etu[etu]
+            
+            # On utilise le classement pré-calculé des étudiants pour comparer en O(1)
+            # Attention : Plus le rang est petit (proche de 0), meilleur est le choix !
+            rang_nouveau = classement_etu[etu][parcours]
+            rang_actuel = classement_etu[etu][parcours_actuel]
+
+            if rang_nouveau < rang_actuel:
+                # L'étudiant accepte le nouveau master et rejette l'ancien (comme Amy avec Xavier et Zach)
+                affectation_etu[etu] = parcours
+                places_prises[parcours] += 1
+                
+                # L'ancien master perd un étudiant, libère une place et retourne faire la queue !
+                places_prises[parcours_actuel] -= 1
+                if places_prises[parcours_actuel] == capacites[parcours_actuel] - 1:
+                    parcours_libres.append(parcours_actuel)
+            else:
+                # L'étudiant refuse, le parcours actuel a essuyé un refus
+                pass 
+
+        # Si le parcours n'est pas encore plein après cette démarche, il retourne dans la file
+        if places_prises[parcours] < capacites[parcours]:
+            parcours_libres.append(parcours)
+
+    # Reformater la sortie pour que ton code de vérification (Q6) fonctionne correctement
+    # On veut un dictionnaire : { id_master : [liste_id_etudiants] }
+    affectations_propres = {i: [] for i in range(nb_parcours)}
+    for etu, master in enumerate(affectation_etu):
+        if master != -1:
+            affectations_propres[master].append(etu)
+
+    return affectations_propres
+
 
 
 def liste_paires_instables(PrefEtu, classement, capacites, affectations):
