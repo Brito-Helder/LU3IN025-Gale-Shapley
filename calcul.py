@@ -8,15 +8,16 @@ def generer_matrice_prefEtu(n):
     PrefEtu = np.zeros((n, nb_parcours), dtype=int)
     for i in range(n):
         PrefEtu[i] = np.random.permutation(nb_parcours)
-    return PrefEtu
+    classement_etu = np.argsort(PrefEtu, axis=1)
+    return PrefEtu, classement_etu
 
 
 def generer_matrice_prefSpe(n):
     PrefSpe = np.zeros((nb_parcours, n), dtype=int)
     for i in range(nb_parcours):
         PrefSpe[i] = np.random.permutation(n)
-    classement = np.argsort(PrefSpe, axis=1)
-    return PrefSpe, classement
+    classement_parcours = np.argsort(PrefSpe, axis=1)
+    return PrefSpe, classement_parcours
 
 
 def generer_capacites_deterministes(n):
@@ -30,8 +31,11 @@ def generer_capacites_deterministes(n):
     return capacites
 
 
-def tracer_courbe():
-    nb_tests = 10
+def tracer_courbe(type): 
+    if type != "cote_etudiant" and type != "cote_parcours":
+        print("Type de courbe inconnu. Veuillez choisir 'cote_etudiant' ou 'cote_parcours'.")
+        return
+    nb_tests = 20
     temps_moyens = []
     valeurs_n = list(range(200, 2201, 200))
     for n in valeurs_n:
@@ -40,12 +44,15 @@ def tracer_courbe():
         temps_total = 0.0
         for test in range(nb_tests):
             # Chargement des données de test
-            PrefEtu = generer_matrice_prefEtu(n)
-            PrefSpe, classement = generer_matrice_prefSpe(n)
+            PrefEtu, classement_etu = generer_matrice_prefEtu(n)
+            PrefSpe, classement_parcours = generer_matrice_prefSpe(n)
 
             # Mesure du temps de calcul
             debut = time.perf_counter()
-            affectations = gale_shapley(PrefEtu, PrefSpe, classement, capacites)
+            if type == "cote_etudiant":
+                gale_shapley_cote_etudiant(PrefEtu, PrefSpe, classement_parcours, capacites)
+            else:   
+                gale_shapley_cote_parcours(PrefEtu, PrefSpe, classement_etu, capacites)
             fin = time.perf_counter()
 
             temps_total += (fin - debut)
@@ -57,11 +64,17 @@ def tracer_courbe():
     plt.figure()
     plt.plot(valeurs_n, temps_moyens, marker='o')
 
-    plt.title("Temps de calcul de Gale-Shapley en fonction du nombre n d'étudiants (n)")
+    plt.title(f"Temps de calcul de Gale_Shapley_{type} en fonction du nombre n d'étudiants (n)")
     plt.xlabel("Nombre d'étudiants (n)")
     plt.ylabel("Temps moyen d'exécution (secondes)")
     plt.grid(True)
-
+    plt.savefig(f"temps_moyens_{type}.png")
+    
     # Affiche le graphique à l'écran
     plt.show()
-    plt.savefig("temps_moyens.png")
+    
+if __name__ == "__main__":
+    tracer_courbe("cote_etudiant")
+    tracer_courbe("cote_parcours")
+    tracer_courbe("test")
+    
