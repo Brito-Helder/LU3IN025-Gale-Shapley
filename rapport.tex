@@ -8,6 +8,7 @@
 \usepackage{multirow}
 \usepackage{geometry}
 \usepackage{caption}
+\usepackage{tikz}
 \geometry{a4paper, margin=1in}
 
 
@@ -29,13 +30,167 @@
 
 \newpage
 
+% Exercice 1
 \section{Problème et affectation}
 
-\section{Évolution du temps de calcul}
+\subsection{Gale-Shapley : Côté étudiants}
+\subsubsection{Choix des structures de données pour l'implémentation}
+\vspace{0.3cm}
 
+\begin{itemize}
+    \item \textbf{Étudiants libres (\texttt{etu\_libres}) : File (Queue)} \\
+    Implémentée via une \texttt{deque} (Double-Ended Queue), elle permet de stocker les étudiants n'ayant pas encore été affectés à un master. 
+    \begin{itemize}
+        \item \textit{Extraction du premier arrivé} : $\mathcal{O}(1)$
+        \item \textit{Ajout d'un étudiant rejeté} : $\mathcal{O}(1)$
+    \end{itemize}
+
+    \item \textbf{Progression des propositions (\texttt{prochain\_voeu}) : Tableau} \\
+    Au lieu de faire un pop sur la liste de préférences d'un étudiant (et donc la détruire), ce tableau stocke simplement l'indice de sa prochaine proposition.
+    Ainsi, \texttt{prochain\_voeu[i]} indique l'indice du prochain master à proposer pour l'étudiant $e_i$ et est incrémenté à chaque proposition. 
+    L'instruction \texttt{PrefEtu[i][prochain\_voeu[i]]} permet d'obtenir le master ciblé sans modifier la liste de préférences.
+
+    \begin{itemize}
+        \item \textit{Lecture et Incrémentation} : $\mathcal{O}(1)$
+    \end{itemize}
+
+    \item \textbf{Position de l'étudiant i dans un parcours j (\texttt{classement}) : Matrice} \\
+    Une matrice \texttt{classement} calculée en amont en inversant la matrice de préférences des masters (\texttt{PrefSpe}). Ainsi, \texttt{classement[i][j]} stocke le rang de l'étudiant $i$ pour le master $j$. Cela évite au master de parcourir sa liste de préférences en $\mathcal{O}(n)$ à chaque proposition.
+    \begin{itemize}
+        \item \textit{Recherche du rang de l'étudiant} : $\mathcal{O}(1)$
+    \end{itemize}
+
+    \item \textbf{Gestion des affectations (\texttt{AFFECTATIONS}) : Tas Min (Min-Heap)} \\
+    Pour chaque master, la liste des étudiants acceptés est maintenue dans une file de priorité (Tas binaire). En insérant l'opposé du rang, le pire étudiant (le plus grand rang, donc le plus petit nombre négatif) est toujours à la racine du tas. Si $c_j$ est la capacité du master $j$, le tas permet de:
+    \begin{itemize}
+        \item \textit{Identifier le pire étudiant (Racine)} : $\mathcal{O}(1)$
+        \item \textit{Insérer un nouvel étudiant} : $\mathcal{O}(\log c_j)$
+        \item \textit{Remplacer le pire étudiant} : $\mathcal{O}(\log c_j)$
+    \end{itemize}
+\end{itemize}
+
+\vspace{0.5cm}
+\noindent\textbf{Fonctionnement du Tas Min (Exemple)}
+
+Imaginons un parcours de capacité $c = 3$. Il a actuellement accepté les étudiants $E_2$ (rang 1), $E_8$ (rang 3) et $E_5$ (rang 4). La racine contient le pire candidat à éjecter en cas de meilleure proposition.
+
+\begin{center}
+  \begin{tikzpicture}[
+    level distance=1.5cm,
+    level 1/.style={sibling distance=4cm},
+    level 2/.style={sibling distance=2cm},
+    every node/.style={circle, draw, thick, align=center, minimum size=1.2cm, fill=blue!5}
+  ]
+    % Racine (Le pire étudiant)
+    \node {\textbf{-4} \\ ($E_5$)}
+      % Enfant gauche
+      child {node {\textbf{-3} \\ ($E_8$)}}
+      % Enfant droit
+      child {node {\textbf{-1} \\ ($E_2$)}};
+  \end{tikzpicture}
+\end{center}
+
+Si un étudiant $E_{10}$ de rang 2 postule, le master regarde la racine (-4). Puisque $-2 > -4$, $E_{10}$ remplace $E_5$, et le tas se rééquilibre automatiquement en $\mathcal{O}(\log c)$.
+
+\begin{center}
+  \begin{tikzpicture}[
+    level distance=1.5cm,
+    level 1/.style={sibling distance=4cm},
+    level 2/.style={sibling distance=2cm},
+    every node/.style={circle, draw, thick, align=center, minimum size=1.2cm, fill=green!5}
+  ]
+    % Nouvelle Racine (Le nouveau pire étudiant)
+    \node {\textbf{-3} \\ ($E_{8}$)}
+      % Enfant gauche
+      child {node {\textbf{-2} \\ ($E_{10}$)}}
+      % Enfant droit
+      child {node {\textbf{-1} \\ ($E_2$)}};
+  \end{tikzpicture}
+\end{center}
+
+\subsubsection{Complexité de l'algorithme}
+L'algorithme de Gale-Shapley garantit que chaque étudiant propose à chaque master au plus une fois. Avec $n$ étudiants et $m$ masters, le nombre total de propositions est au maximum $n \times m$.
+
+\begin{itemize}
+    \item \textit{Boucle principale (Propositions)} : $\mathcal{O}(n \times m)$ dans le pire des cas.
+    \item \textit{Gestion des affectations} : À chaque proposition, l'étudiant est évalué par le master. Dans le pire des cas, cette opération coûte $\mathcal{O}(\log c_j)$.
+\end{itemize}
+
+Ainsi, la complexité temporelle pire cas de l'algorithme est de $\mathbf{\mathcal{O}(n \times m \log c_{\max})}$, où $c_{\max}$ est la plus grande capacité parmi tous les masters.
+
+\vspace{0.2cm}
+\textbf{Remarque :} En pratique, les capacités $c_j$ des masters sont des valeurs petites et fixes, indépendantes du nombre total de candidats $n$. Le terme $\log c_{\max}$ agit donc comme une constante $\mathcal{O}(1)$ et la complexité effective est $\mathcal{O}(n \times m)$.
+
+\subsection{Gale-Shapley : Côté parcours}
+
+\subsection{Affectations obtenues sur les fichiers tests et stabilité}
+\begin{table}[htbp]
+  \centering
+  % On aère légèrement pour que les indices ne touchent pas les lignes
+  \renewcommand{\arraystretch}{1.5} 
+  
+  \caption{Côté étudiants et côté parcours}
+  \vspace{8pt}
+  \label{tab:resultat_affectation}
+  
+  \begin{tabular}{l | c | c | c | c | c | c | c | c | c | c}
+    \toprule
+    \textbf{Parcours} & \textbf{0} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} & \textbf{9} \\
+    \midrule
+    \textbf{Étudiants} & $E_5, E_{12}$ & $E_4$ & $E_9$ & $E_8$ & $E_{10}, E_{11}$ & $E_0$ & $E_1$ & $E_7$ & $E_6$ & $E_2, E_3$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{itemize}
+    \item On obtient les mêmes affectations en appliquant l'algorithme de Gale-Shapley, que ce soit du côté des étudiants ou du côté des parcours, à l'ordre d'affectation près.
+    \item La stabilité de l'affectation est vérifiée par notre fonction \texttt{liste\_paires\_instables} qui retourne une liste vide, indiquant qu'il n'existe aucune paire instable.
+\end{itemize}
+
+
+
+
+% Exercice 2
+\newpage
+\section{Évolution du temps de calcul}
+Voici les graphiques obtenus pour les différentes configurations d'affectation (côté étudiants et côté parcours) en fonction du nombre d'étudiants $n$ et du nombre de parcours $m$.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Graphiques/temps_moyens_cote_etudiant.png}
+    \caption{Évolution du temps de calcul en fonction de $n$ et $m$}
+    \label{fig:temps_calcul}
+\end{figure}
+
+% Exercice 3
+\newpage
 \section{Équité et PL(NE)}
-% Question 3.1
+% Question 11
 \subsection{PLNE permettant de déterminer une affectation qui maximise l’utilité minimale des étudiants.}
+
+\noindent\textbf{Modélisation de la recherche de l'affectation maximisant l'utilité minimale des étudiants}
+
+\vspace{0.3cm}
+\noindent\textbf{Variables:} Pour tout étudiant $i \in \{0,\dots,12\}$ et tout parcours $j \in \{0,\dots,9\}$, on définit la variable $x_{ij}$ telle que $x_{ij} = 1$ si l'étudiant $e_i$ est affecté au parcours $p_j$ et $x_{ij} = 0$ sinon.
+
+\vspace{0.3cm}
+\noindent\textbf{Fonction objectif :} 
+\[ \max \left( \min_{i \in \{0,\dots,12\}} \sum_{j=0}^{9} x_{ij} u_{e_i}(p_j) \right) \]
+
+La fonction min n'étant pas linéaire, on peut introduire, comme dans le cours, une variable auxiliaire $Z$ représentant l'utilité du plus malheureux des étudiants pour linéariser le problème. Il se reformule comme suit :
+
+\vspace{0.3cm}
+\noindent\textbf{Fonction objectif :} 
+\[ \max Z \]
+
+\vspace{0.3cm}
+\noindent\textbf{Contraintes :}
+\begin{align*}
+& \sum_{j=0}^{9} x_{ij} = 1, && \forall i \in \{0,\dots,12\} && \text{(chaque étudiant a un seul parcours)} \\
+& \sum_{i=0}^{12} x_{ij} \leq c_j, && \forall j \in \{0,\dots,9\} && \text{(capacité $c_j$ respectée)} \\
+& Z \leq \sum_{j=0}^{9} x_{ij} u_{e_i}(p_j), && \forall i \in \{0,\dots,12\} && \text{($Z$ est borné par l'utilité de chaque étudiant)} \\
+& x_{ij} \in \{0, 1\}, \ Z \geq 0, && \forall i, j && \text{(domaine des variables)}
+\end{align*}
+
 
 \begin{table}[htbp]
   \centering
@@ -67,25 +222,27 @@
   \end{tabular}
 \end{table}
 
-\noindent\textbf{Modélisation de la recherche de l'affectation maximisant l'utilité minimale des étudiants}
-
-\vspace{0.3cm}
-\noindent\textbf{Variables:} Pour tout étudiant $i \in \{0,\dots,12\}$ et tout parcours $j \in \{0,\dots,13\}$, on définit la variable $x_{ij}$ telle que $x_{ij} = 1$ si l'étudiant $e_i$ est affecté au parcours $p_j$ et $x_{ij} = 0$ sinon.
-
-\vspace{0.3cm}
-\noindent\textbf{Fonction objectif :} 
-\[ \max \left( \min_{i \in \{0,\dots,12\}} \sum_{j=0}^{13} x_{ij} u_{e_i}(p_j) \right) \]
-
-\noindent\textbf{Contraintes:}
-\begin{align*}
-& \sum_{j=0}^{13} x_{ij} = 1, && \forall i \in \{0,\dots,12\} && \text{(chaque étudiant est affecté à un seul parcours)} \\
-& \sum_{i=0}^{12} x_{ij} \leq c_j, && \forall j \in \{0,\dots,13\} && \text{(la capacité $c_j$ de chaque parcours est respectée)} \\
-& x_{ij} \in \{0, 1\}, && \forall i, j && \text{(domaine des variables)}
-\end{align*}
 
 
 
 \subsection{PLNE permettant de trouver une solution qui maximise la somme des utilités (étudiants et parcours)}
+
+\noindent\textbf{Modélisation de la recherche de l'affectation maximisant l'utilité totale (efficacité)}
+
+Avec les variables $x_{ij}$ définies précédemment, on peut formuler le problèmede la manière suivante :
+
+\vspace{0.3cm}
+\noindent\textbf{Fonction objectif :} 
+\[ \max \sum_{i=0}^{12} \sum_{j=0}^{9} x_{ij}\left(u_{e_i}(p_j) + u_{p_j}(e_i)\right) \]
+
+\noindent\textbf{Contraintes:}
+\begin{align*}
+& \sum_{j=0}^{9} x_{ij} = 1, && \forall i \in \{0,\dots,12\} && \text{(chaque étudiant est affecté à un seul parcours)} \\
+& \sum_{i=0}^{12} x_{ij} \leq c_j, && \forall j \in \{0,\dots,9\} && \text{(la capacité $c_j$ de chaque parcours est respectée)} \\
+& x_{ij} \in \{0, 1\}, && \forall i, j && \text{(domaine des variables)}
+\end{align*}
+
+
 
 \begin{table}[htbp]
   \centering
@@ -115,24 +272,21 @@
   \end{tabular}
 \end{table}
 
-\noindent\textbf{Modélisation de la recherche de l'affectation maximisant l'utilité totale (efficacité)}
 
-\vspace{0.3cm}
-\noindent\textbf{Variables:} Pour tout étudiant $i \in \{0,\dots,12\}$ et tout parcours $j \in \{0,\dots,13\}$, on définit la variable $x_{ij}$ telle que $x_{ij} = 1$ si l'étudiant $e_i$ est affecté au parcours $p_j$ et $x_{ij} = 0$ sinon.
 
-\vspace{0.3cm}
-\noindent\textbf{Fonction objectif :} 
-\[ \max \sum_{i=0}^{12} \sum_{j=0}^{13} x_{ij}\left(u_{e_i}(p_j) + u_{p_j}(e_i)\right) \]
 
-\noindent\textbf{Contraintes:}
-\begin{align*}
-& \sum_{j=0}^{13} x_{ij} = 1, && \forall i \in \{0,\dots,12\} && \text{(chaque étudiant est affecté à un seul parcours)} \\
-& \sum_{i=0}^{12} x_{ij} \leq c_j, && \forall j \in \{0,\dots,13\} && \text{(la capacité $c_j$ de chaque parcours est respectée)} \\
-& x_{ij} \in \{0, 1\}, && \forall i, j && \text{(domaine des variables)}
-\end{align*}
+
+
+
+
+
+
+
+
 
 
 \subsection{PLNE maximisant la somme des utilités (étudiants
 et parcours) parmi les affectations où chaque étudiant a un de ses k premiers choix (pour un k fixé)}
+
 
 \end{document}
