@@ -124,10 +124,28 @@ Ainsi, la complexité temporelle pire cas de l'algorithme est de $\mathbf{\mathc
 \subsection{Gale-Shapley : Côté parcours}
 
 \subsection{Affectations obtenues sur les fichiers tests et stabilité}
+\begin{table}[htbp]
+  \centering
+  % On aère légèrement pour que les indices ne touchent pas les lignes
+  \renewcommand{\arraystretch}{1.5} 
+  
+  \caption{Côté étudiants et côté parcours}
+  \vspace{8pt}
+  \label{tab:resultat_affectation}
+  
+  \begin{tabular}{l | c | c | c | c | c | c | c | c | c | c}
+    \toprule
+    \textbf{Parcours} & \textbf{0} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} & \textbf{9} \\
+    \midrule
+    \textbf{Étudiants} & $E_5, E_{12}$ & $E_4$ & $E_9$ & $E_8$ & $E_{10}, E_{11}$ & $E_0$ & $E_1$ & $E_7$ & $E_6$ & $E_2, E_3$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
-
-
-
+\begin{itemize}
+    \item On obtient les mêmes affectations en appliquant l'algorithme de Gale-Shapley, que ce soit du côté des étudiants ou du côté des parcours, à l'ordre d'affectation près.
+    \item La stabilité de l'affectation est vérifiée par notre fonction \texttt{liste\_paires\_instables} qui retourne une liste vide, indiquant qu'il n'existe aucune paire instable.
+\end{itemize}
 
 
 
@@ -135,13 +153,44 @@ Ainsi, la complexité temporelle pire cas de l'algorithme est de $\mathbf{\mathc
 % Exercice 2
 \newpage
 \section{Évolution du temps de calcul}
-
+Voici les graphiques obtenus pour les différentes configurations d'affectation (côté étudiants et côté parcours) en fonction du nombre d'étudiants $n$ et du nombre de parcours $m$.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Graphiques/temps_moyens_cote_etudiant.png}
+    \caption{Évolution du temps de calcul en fonction de $n$ et $m$}
+    \label{fig:temps_calcul}
+\end{figure}
 
 % Exercice 3
 \newpage
 \section{Équité et PL(NE)}
 % Question 11
 \subsection{PLNE permettant de déterminer une affectation qui maximise l’utilité minimale des étudiants.}
+
+\noindent\textbf{Modélisation de la recherche de l'affectation maximisant l'utilité minimale des étudiants}
+
+\vspace{0.3cm}
+\noindent\textbf{Variables:} Pour tout étudiant $i \in \{0,\dots,12\}$ et tout parcours $j \in \{0,\dots,9\}$, on définit la variable $x_{ij}$ telle que $x_{ij} = 1$ si l'étudiant $e_i$ est affecté au parcours $p_j$ et $x_{ij} = 0$ sinon.
+
+\vspace{0.3cm}
+\noindent\textbf{Fonction objectif :} 
+\[ \max \left( \min_{i \in \{0,\dots,12\}} \sum_{j=0}^{9} x_{ij} u_{e_i}(p_j) \right) \]
+
+La fonction min n'étant pas linéaire, on peut introduire, comme dans le cours, une variable auxiliaire $Z$ représentant l'utilité du plus malheureux des étudiants pour linéariser le problème. Il se reformule comme suit :
+
+\vspace{0.3cm}
+\noindent\textbf{Fonction objectif :} 
+\[ \max Z \]
+
+\vspace{0.3cm}
+\noindent\textbf{Contraintes :}
+\begin{align*}
+& \sum_{j=0}^{9} x_{ij} = 1, && \forall i \in \{0,\dots,12\} && \text{(chaque étudiant a un seul parcours)} \\
+& \sum_{i=0}^{12} x_{ij} \leq c_j, && \forall j \in \{0,\dots,9\} && \text{(capacité $c_j$ respectée)} \\
+& Z \leq \sum_{j=0}^{9} x_{ij} u_{e_i}(p_j), && \forall i \in \{0,\dots,12\} && \text{($Z$ est borné par l'utilité de chaque étudiant)} \\
+& x_{ij} \in \{0, 1\}, \ Z \geq 0, && \forall i, j && \text{(domaine des variables)}
+\end{align*}
+
 
 \begin{table}[htbp]
   \centering
@@ -173,25 +222,27 @@ Ainsi, la complexité temporelle pire cas de l'algorithme est de $\mathbf{\mathc
   \end{tabular}
 \end{table}
 
-\noindent\textbf{Modélisation de la recherche de l'affectation maximisant l'utilité minimale des étudiants}
-
-\vspace{0.3cm}
-\noindent\textbf{Variables:} Pour tout étudiant $i \in \{0,\dots,12\}$ et tout parcours $j \in \{0,\dots,13\}$, on définit la variable $x_{ij}$ telle que $x_{ij} = 1$ si l'étudiant $e_i$ est affecté au parcours $p_j$ et $x_{ij} = 0$ sinon.
-
-\vspace{0.3cm}
-\noindent\textbf{Fonction objectif :} 
-\[ \max \left( \min_{i \in \{0,\dots,12\}} \sum_{j=0}^{13} x_{ij} u_{e_i}(p_j) \right) \]
-
-\noindent\textbf{Contraintes:}
-\begin{align*}
-& \sum_{j=0}^{13} x_{ij} = 1, && \forall i \in \{0,\dots,12\} && \text{(chaque étudiant est affecté à un seul parcours)} \\
-& \sum_{i=0}^{12} x_{ij} \leq c_j, && \forall j \in \{0,\dots,13\} && \text{(la capacité $c_j$ de chaque parcours est respectée)} \\
-& x_{ij} \in \{0, 1\}, && \forall i, j && \text{(domaine des variables)}
-\end{align*}
 
 
 
 \subsection{PLNE permettant de trouver une solution qui maximise la somme des utilités (étudiants et parcours)}
+
+\noindent\textbf{Modélisation de la recherche de l'affectation maximisant l'utilité totale (efficacité)}
+
+Avec les variables $x_{ij}$ définies précédemment, on peut formuler le problèmede la manière suivante :
+
+\vspace{0.3cm}
+\noindent\textbf{Fonction objectif :} 
+\[ \max \sum_{i=0}^{12} \sum_{j=0}^{9} x_{ij}\left(u_{e_i}(p_j) + u_{p_j}(e_i)\right) \]
+
+\noindent\textbf{Contraintes:}
+\begin{align*}
+& \sum_{j=0}^{9} x_{ij} = 1, && \forall i \in \{0,\dots,12\} && \text{(chaque étudiant est affecté à un seul parcours)} \\
+& \sum_{i=0}^{12} x_{ij} \leq c_j, && \forall j \in \{0,\dots,9\} && \text{(la capacité $c_j$ de chaque parcours est respectée)} \\
+& x_{ij} \in \{0, 1\}, && \forall i, j && \text{(domaine des variables)}
+\end{align*}
+
+
 
 \begin{table}[htbp]
   \centering
@@ -221,24 +272,21 @@ Ainsi, la complexité temporelle pire cas de l'algorithme est de $\mathbf{\mathc
   \end{tabular}
 \end{table}
 
-\noindent\textbf{Modélisation de la recherche de l'affectation maximisant l'utilité totale (efficacité)}
 
-\vspace{0.3cm}
-\noindent\textbf{Variables:} Pour tout étudiant $i \in \{0,\dots,12\}$ et tout parcours $j \in \{0,\dots,13\}$, on définit la variable $x_{ij}$ telle que $x_{ij} = 1$ si l'étudiant $e_i$ est affecté au parcours $p_j$ et $x_{ij} = 0$ sinon.
 
-\vspace{0.3cm}
-\noindent\textbf{Fonction objectif :} 
-\[ \max \sum_{i=0}^{12} \sum_{j=0}^{13} x_{ij}\left(u_{e_i}(p_j) + u_{p_j}(e_i)\right) \]
 
-\noindent\textbf{Contraintes:}
-\begin{align*}
-& \sum_{j=0}^{13} x_{ij} = 1, && \forall i \in \{0,\dots,12\} && \text{(chaque étudiant est affecté à un seul parcours)} \\
-& \sum_{i=0}^{12} x_{ij} \leq c_j, && \forall j \in \{0,\dots,13\} && \text{(la capacité $c_j$ de chaque parcours est respectée)} \\
-& x_{ij} \in \{0, 1\}, && \forall i, j && \text{(domaine des variables)}
-\end{align*}
+
+
+
+
+
+
+
+
 
 
 \subsection{PLNE maximisant la somme des utilités (étudiants
 et parcours) parmi les affectations où chaque étudiant a un de ses k premiers choix (pour un k fixé)}
+
 
 \end{document}
