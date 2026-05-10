@@ -8,6 +8,7 @@
 \usepackage{multirow}
 \usepackage{geometry}
 \usepackage{caption}
+\usepackage{float}
 \usepackage{tikz}
 \geometry{a4paper, margin=1in}
 
@@ -288,5 +289,70 @@ Avec les variables $x_{ij}$ définies précédemment, on peut formuler le probl�
 \subsection{PLNE maximisant la somme des utilités (étudiants
 et parcours) parmi les affectations où chaque étudiant a un de ses k premiers choix (pour un k fixé)}
 
+\section{Comparaison et analyse des algorithmes d'affectation}
 
+Les résultats présentés ci-après ont été obtenus en exécutant nos implémentations sur les instances de test fournies, à savoir les matrices de préférences \texttt{PrefEtu} et \texttt{PrefSpe}. Cette analyse vise à confronter les approches algorithmiques (Gale-Shapley) et les approches par programmation linéaire (PLNE) selon les critères d'efficacité, d'équité et de stabilité.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Algorithme} & \textbf{Utilité Totale} & \textbf{Utilité Moyenne} & \textbf{Utilité Minimale} & \textbf{Paires Instables} \\
+\hline
+GS (Côté Étudiants) & 203 & 7.81 & 4 & 0 \\
+\hline
+GS (Côté Parcours) & 203 & 7.81 & 4 & 0 \\
+\hline
+PLNE Utilitariste  & 213 & 8.19 & 4 & 7 \\
+\hline
+PLNE Équitable  & 192 & 7.38 & 5 & 3 \\
+\hline
+PLNE Top-$k$ ($k=5$) & 201 & 7.73 & 5 & 5 \\
+\hline
+\end{tabular}
+\caption{Comparaison des performances et de la stabilité des différents algorithmes d'affectation.}
+\label{tab:comparaison_algos}
+\end{table}
+
+\subsubsection*{Synthèse des approches}
+
+L'analyse de ces résultats nous permet de tirer les conclusions suivantes sur les différents modèles étudiés :
+
+\begin{itemize}
+    \item \textbf{Gale-Shapley (Stabilité absolue)}
+    \begin{itemize}
+        \item \textbf{Force :} Garantit mathématiquement 0 paire instable, assurant une robustesse sociale parfaite (aucune contestation possible).
+        \item \textbf{Faiblesse :} L'utilité totale plafonne à 203. Le système "gâche" du potentiel de satisfaction globale pour empêcher toute instabilité.
+    \end{itemize}
+
+    \item \textbf{PLNE Utilitariste (Efficacité maximale)}
+    \begin{itemize}
+        \item \textbf{Force :} Atteint le maximum théorique de satisfaction globale avec un score de 213.
+        \item \textbf{Faiblesse :} C'est un modèle "injuste" et très instable. Il sacrifie certains étudiants (utilité minimale à 4) pour booster le score global et génère 7 paires instables en forçant des combinaisons purement comptables.
+    \end{itemize}
+
+    \item \textbf{PLNE Équitable (Justice sociale)}
+    \begin{itemize}
+        \item \textbf{Force :} Protège les plus vulnérables en garantissant le 5ème vœu au minimum (utilité minimale de 5).
+        \item \textbf{Faiblesse :} Illustre le "prix de l'équité". Pour sauver un étudiant, le système fait chuter l'utilité totale à 192 et génère tout de même 3 paires instables.
+    \end{itemize}
+
+    \item \textbf{PLNE Top-$k$ (Compromis optimal)}
+    \begin{itemize}
+        \item \textbf{Force :} Avec $k=5$, il garantit l'équité (personne sous le 5ème vœu) tout en restaurant une excellente utilité totale (201), très proche du score de Gale-Shapley.
+        \item \textbf{Faiblesse :} L'instabilité résiduelle (5 paires instables) est le prix à payer pour maintenir ce niveau de garantie individuelle sans trop dégrader le bien-être collectif.
+    \end{itemize}
+
+
+\section{Conclusion}
+
+En définitive, ce projet démontre qu'il n'y a pas d'algorithme "magique" ou parfait pour résoudre le problème des mariages stables. Le choix d'une méthode d'affectation relève avant tout d'un choix politique et institutionnel :
+
+\begin{itemize}
+    \item Si l'institution veut éviter à tout prix les contestations étudiantes : il faut choisir l'algorithme de \textbf{Gale-Shapley}.
+    \item Si l'institution souhaite maximiser le bonheur global de la promotion avec un filet de sécurité : il faut choisir le \textbf{PLNE Top-$k$}.
+\end{itemize}
+
+\end{itemize}
 \end{document}
