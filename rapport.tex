@@ -8,6 +8,7 @@
 \usepackage{multirow}
 \usepackage{geometry}
 \usepackage{caption}
+\usepackage{subcaption}
 \usepackage{tikz}
 \geometry{a4paper, margin=1in}
 
@@ -29,6 +30,10 @@
 \end{titlepage}
 
 \newpage
+
+
+\section*{Introduction}
+Ce projet modélise le processus d'affectation des étudiants aux 10 parcours du Master Informatique de Sorbonne Université. L'admission reposant sur des préférences bilatérales (les vœux des candidats et l'évaluation de leurs dossiers par les responsables), l'objectif de cette étude est d'implémenter et d'analyser l'algorithme de Gale-Shapley afin de garantir une répartition stable et optimale.
 
 % Exercice 1
 \section{Problème et affectation}
@@ -121,7 +126,44 @@ Ainsi, la complexité temporelle pire cas de l'algorithme est de $\mathbf{\mathc
 \vspace{0.2cm}
 \textbf{Remarque :} En pratique, les capacités $c_j$ des masters sont des valeurs petites et fixes, indépendantes du nombre total de candidats $n$. Le terme $\log c_{\max}$ agit donc comme une constante $\mathcal{O}(1)$ et la complexité effective est $\mathcal{O}(n \times m)$.
 
+
+
+
+
+
 \subsection{Gale-Shapley : Côté parcours}
+
+Dans cette variante, les rôles sont inversés : ce sont les parcours qui font des propositions aux étudiants. 
+
+Ce changement de paradigme simplifie grandement les structures de données nécessaires. Puisque chaque étudiant ne peut accepter qu'une seule affectation (capacité de 1), la gestion d'une file de priorité (Tas Min) du côté de la réception des offres n'est plus requise. Une simple comparaison d'entiers suffit.
+
+Voici les structures de données retenues pour garantir une exécution optimale :
+
+\begin{itemize}
+    \item \textbf{Parcours libres (\texttt{parcours\_libres}) : File (Queue)} \\
+    Implémentée via une \texttt{deque}. Elle stocke les indices des parcours qui ont encore des places disponibles et qui n'ont pas encore épuisé leur liste de candidats. L'extraction et l'ajout se font en $\mathcal{O}(1)$.
+
+    \item \textbf{Progression des propositions (\texttt{prochain\_voeu}) : Tableau} \\
+    Un tableau de taille $m$ stockant un pointeur pour chaque parcours. Il indique l'indice i du prochain étudiant à démarcher dans la liste \texttt{PrefSpe[i]}. L'incrémentation se fait en $\mathcal{O}(1)$.
+
+    \item \textbf{Gestion des affectations (\texttt{affectation\_etu}) : Tableau 1D} \\
+    Ce tableau de taille $n$ vient remplacer la structure de Tas Min de la variante précédente. \texttt{affectation\_etu[i]} stocke simplement l'indice du master actuellement retenu par l'étudiant $e_i$ (initialisé à -1). En cas de meilleure offre, cette valeur est écrasée en $\mathcal{O}(1)$.
+
+    \item \textbf{Comparaison des candidatures (\texttt{classement\_etu}) : Matrice} \\
+    Pour que l'étudiant puisse évaluer la nouvelle proposition quasi instantanément, cette matrice pré-calculée fournit le rang d'un master donné pour un étudiant précis en $\mathcal{O}(1)$.
+\end{itemize}
+
+\vspace{0.3cm}
+\noindent\textbf{Complexité : }
+La boucle principale s'exécute tant qu'il y a des parcours libres. Dans le pire des cas, tous les parcours feront une offre à tous les étudiants de leur liste. Le nombre maximum de propositions reste donc borné par $\mathcal{O}(n \times m)$. Puisque chaque traitement (vérification du rang, mise à jour de l'affectation, réinsertion dans la file) s'effectue en temps constant $\mathcal{O}(1)$, la complexité temporelle théorique de cette variante est strictement $\mathcal{O}(n \times m)$.
+
+
+
+
+
+
+
+
 
 \subsection{Affectations obtenues sur les fichiers tests et stabilité}
 \begin{table}[htbp]
@@ -153,16 +195,71 @@ Ainsi, la complexité temporelle pire cas de l'algorithme est de $\mathbf{\mathc
 % Exercice 2
 \newpage
 \section{Évolution du temps de calcul}
-Voici les graphiques obtenus pour les différentes configurations d'affectation (côté étudiants et côté parcours) en fonction du nombre d'étudiants $n$ et du nombre de parcours $m$.
+Voici les graphiques obtenus pour les différentes configurations d'affectation (côté étudiants et côté parcours) en fonction du nombre d'étudiants $n$ (le nombre de parcours $m$ étant fixé à 10).
+
+% --- TEMPS DE CALCUL ---
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{Graphiques/temps_moyens_cote_etudiant.png}
-    \caption{Évolution du temps de calcul en fonction de $n$ et $m$}
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Graphiques/temps_moyens_cote_etudiant.png}
+        \caption{Analyse côté Étudiant}
+    \end{subfigure}
+    \hfill % Ajoute un espace élastique entre les deux images
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Graphiques/temps_moyens_cote_parcours.png}
+        \caption{Analyse côté Parcours}
+    \end{subfigure}
+    
+    \caption{Évolution du temps de calcul en fonction de $n$}
     \label{fig:temps_calcul}
 \end{figure}
 
+
+% --- ITÉRATIONS ---
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Graphiques/iterations_moyennes_cote_etudiant.png}
+        \caption{Analyse côté Étudiant}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Graphiques/iterations_moyennes_cote_parcours.png}
+        \caption{Analyse côté Parcours}
+    \end{subfigure}
+    
+    \caption{Nombre moyen d'itérations pour atteindre la convergence}
+    \label{fig:iterations_calcul}
+\end{figure}
+
+
+\vspace{0.5cm}
+
+Comme le mettent en évidence ces graphiques, le temps d'exécution et le nombre d'itérations croissent linéairement en fonction du nombre d'étudiants $n$. Nous observons donc une complexité empirique en $\mathcal{O}(n)$ pour nos deux variantes de l'algorithme de Gale-Shapley.
+
+Ce résultat expérimental est cohérent avec notre analyse théorique préliminaire. En effet, la complexité a été établie à $\mathcal{O}(n \times m)$. Cependant, dans le cadre de nos tests, le nombre de parcours $m$ est resté fixe ($m = 10$). La formule théorique devient ainsi $\mathcal{O}(10 \times n)$, ce qui se simplifie en $\mathcal{O}(n)$.
+
+\vspace{0.5cm}
+\noindent\textbf{\large Asymétrie de convergence : l'impact du côté proposant}
+\vspace{0.5cm}
+
+On remarque que pour $n = 2250$, la variante "côté étudiant" converge en $\sim 2500$ itérations, contre près de $12000$ pour la variante "côté parcours". Bien que les deux algorithmes soient en $\mathcal{O}(n)$, la constante multiplicative est environ 5 fois plus grande lorsque les parcours font les propositions.
+
+Ce phénomène est cohérent avec l'analyse théorique de l'algorithme de Gale-Shapley en présence de capacités asymétriques :
+\begin{itemize}
+    \item \textbf{Côté Étudiant :} La liste de préférences d'un candidat est bornée par $m$ (un petit nombre, 10 dans notre cas). Le processus de proposition s'épuise donc très rapidement.
+    \item \textbf{Côté Parcours :} La liste de préférences d'un master est de taille $n$. Étant donné qu'un étudiant ne retient qu'une seule offre d'admission (capacité de 1), les masters subissent un taux de rejet massif de la part des meilleurs étudiants. Ils sont contraints de parcourir une grande partie de leur liste de $n$ candidats pour saturer leur capacité $c_j$, générant ainsi un très grand nombre d'itérations.
+\end{itemize}
+Ce constat démontre que pour optimiser le temps de calcul, il est préférable de faire proposer le parti ayant la plus petite liste de préférences.
+
+
+
 % Exercice 3
-\newpage
+\vspace{1cm}
 \section{Équité et PL(NE)}
 % Question 11
 \subsection{PLNE permettant de déterminer une affectation qui maximise l’utilité minimale des étudiants.}
@@ -182,7 +279,6 @@ La fonction min n'étant pas linéaire, on peut introduire, comme dans le cours,
 \noindent\textbf{Fonction objectif :} 
 \[ \max Z \]
 
-\vspace{0.3cm}
 \noindent\textbf{Contraintes :}
 \begin{align*}
 & \sum_{j=0}^{9} x_{ij} = 1, && \forall i \in \{0,\dots,12\} && \text{(chaque étudiant a un seul parcours)} \\
@@ -194,7 +290,6 @@ La fonction min n'étant pas linéaire, on peut introduire, comme dans le cours,
 
 \begin{table}[htbp]
   \centering
-  \renewcommand{\arraystretch}{1.2} % Pour éviter l'effet "collé"
   \caption{Matrice $(u_{e_i}(p_j))_{i,j}$ des utilités des étudiants}
   \vspace{8pt}
   \label{tab:matrice_utilites_etu}
@@ -224,14 +319,15 @@ La fonction min n'étant pas linéaire, on peut introduire, comme dans le cours,
 
 
 
-
+% Question 12
+ \newpage
 \subsection{PLNE permettant de trouver une solution qui maximise la somme des utilités (étudiants et parcours)}
 
 \noindent\textbf{Modélisation de la recherche de l'affectation maximisant l'utilité totale (efficacité)}
 
 Avec les variables $x_{ij}$ définies précédemment, on peut formuler le problèmede la manière suivante :
 
-\vspace{0.3cm}
+\vspace{0.1cm}
 \noindent\textbf{Fonction objectif :} 
 \[ \max \sum_{i=0}^{12} \sum_{j=0}^{9} x_{ij}\left(u_{e_i}(p_j) + u_{p_j}(e_i)\right) \]
 
@@ -243,12 +339,10 @@ Avec les variables $x_{ij}$ définies précédemment, on peut formuler le probl�
 \end{align*}
 
 
-
 \begin{table}[htbp]
   \centering
   \caption{Matrice \((U_{ij})_{i,j}\) des utilités totales $u_{e_i}(p_j) + u_{p_j}(e_i)$}
   \label{tab:matrice_utilites}
-  
   \begin{tabular}{c | cccccccccc}
     \toprule
     \multirow{2}{*}{Etudiants} & \multicolumn{10}{c}{Parcours} \\
@@ -274,19 +368,113 @@ Avec les variables $x_{ij}$ définies précédemment, on peut formuler le probl�
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+\newpage
 \subsection{PLNE maximisant la somme des utilités (étudiants
 et parcours) parmi les affectations où chaque étudiant a un de ses k premiers choix (pour un k fixé)}
 
+% Question 13
+
+\vspace{0.5cm}
+\noindent\textbf{Modélisation de la recherche de l'affectation maximisant l'utilité avec garantie de rang}
+
+\vspace{0.3cm}
+\noindent\textbf{Variables :} Celles $x_{ij}$ définies précédemment. \\
+Soit $k$ le rang maximum acceptable pour le vœu d'un étudiant et $m=10$ le nombre total de parcours.
+
+\vspace{0.3cm}
+\noindent\textbf{Fonction objectif :} 
+On cherche à maximiser le bonheur total, c'est-à-dire la somme des utilités des étudiants et des parcours pour les affectations réalisées :
+\[ \max \sum_{i=0}^{12} \sum_{j=0}^{9} x_{ij} \Big( u_{e_i}(p_j) + u_{p_j}(e_i) \Big) \]
+
+\vspace{0.3cm}
+\noindent\textbf{Contraintes :}
+\begin{align*}
+& \sum_{j=0}^{9} x_{ij} = 1, && \forall i \in \{0,\dots,12\} && \text{(chaque étudiant a un seul parcours)} \\
+& \sum_{i=0}^{12} x_{ij} \leq c_j, && \forall j \in \{0,\dots,9\} && \text{(la capacité $c_j$ est respectée)} \\
+& \sum_{j=0}^{9} x_{ij} u_{e_i}(p_j) \geq m - k, && \forall i \in \{0,\dots,12\} && \text{(garantie d'avoir un des $k$ premiers choix)} \\
+& x_{ij} \in \{0, 1\}, && \forall i, j && \text{(domaine des variables)}
+\end{align*}
+
+Le plus petit k pour lequel notre PLNE retourne un mariage parfait est k = 5. Cela signifie que dans la solution optimale trouvée, chaque étudiant est affecté à un parcours figurant parmi ses 5 premiers choix.
+
+\begin{table}[htbp]
+  \centering
+  % On aère légèrement pour que les indices ne touchent pas les lignes
+  \renewcommand{\arraystretch}{1.5} 
+  
+  \caption{Affectations obtenues}
+  \vspace{8pt}
+  \label{tab:resultat_affectation}
+  
+  \begin{tabular}{l | c | c | c | c | c | c | c | c | c | c}
+    \toprule
+    \textbf{Parcours} & \textbf{0} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} & \textbf{9} \\
+    \midrule
+    \textbf{Étudiants} & $E_7, E_{12}$ & $E_4$ & $E_9$ & $E_{10}$ & $E_{2}, E_{11}$ & $E_1$ & $E_8$ & $E_6$ & $E_{0}$ & $E_3, E_5$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\newpage
+\subsection{Synthèse des approches}
+
+\begin{table}[htbp]
+  \centering
+  \renewcommand{\arraystretch}{1.2}
+  \caption{Comparaison des performances et de la stabilité des différents algorithmes d'affectation.}
+  \begin{tabular}{|l|c|c|c|c|}
+    \hline
+    \textbf{Algorithme} & \textbf{Utilité Totale} & \textbf{Utilité Moyenne} & \textbf{Utilité Minimale} & \textbf{Paires Instables} \\
+    \hline
+    GS (Côté Étudiants) & 203 & 7.81 & 4 & 0 \\
+    \hline
+    GS (Côté Parcours) & 203 & 7.81 & 4 & 0 \\
+    \hline
+    PLNE Équitable  & 192 & 7.38 & 5 & 3 \\
+    \hline
+    PLNE Utilitariste  & 213 & 8.19 & 4 & 7 \\
+    \hline
+    PLNE Top-$k$ ($k=5$) & 201 & 7.73 & 5 & 5 \\
+    \hline
+  \end{tabular}
+  \label{tab:comparaison_algos}
+\end{table}
+
+L'analyse de ces résultats nous permet de tirer les conclusions suivantes sur les différents modèles étudiés:
+
+\begin{itemize}
+    \item \textbf{Gale-Shapley (Stabilité absolue)}
+    \begin{itemize}
+        \item \textbf{Force :} Garantit mathématiquement 0 paire instable, assurant une robustesse sociale parfaite (aucune contestation possible).
+        \item \textbf{Faiblesse :} L'utilité totale plafonne à 203. Le système "gâche" du potentiel de satisfaction globale pour empêcher toute instabilité.
+    \end{itemize}
+
+    \item \textbf{PLNE Utilitariste (Efficacité maximale)}
+    \begin{itemize}
+        \item \textbf{Force :} Atteint le maximum théorique de satisfaction globale avec un score de 213.
+        \item \textbf{Faiblesse :} C'est un modèle "injuste" et très instable. Il sacrifie certains étudiants (utilité minimale à 4) pour booster le score global et génère 7 paires instables en forçant des combinaisons purement comptables.
+    \end{itemize}
+
+    \item \textbf{PLNE Équitable (Justice sociale)}
+    \begin{itemize}
+        \item \textbf{Force :} Protège les plus vulnérables en garantissant le 5ème vœu au minimum (utilité minimale de 5).
+        \item \textbf{Faiblesse :} Illustre le "prix de l'équité". Pour sauver un étudiant, le système fait chuter l'utilité totale à 192 et génère tout de même 3 paires instables.
+    \end{itemize}
+
+    \item \textbf{PLNE Top-$k$ (Compromis optimal)}
+    \begin{itemize}
+        \item \textbf{Force :} Avec $k=5$, il garantit l'équité (personne sous le 5ème vœu) tout en restaurant une excellente utilité totale (201), très proche du score de Gale-Shapley.
+        \item \textbf{Faiblesse :} L'instabilité résiduelle (5 paires instables) est le prix à payer pour maintenir ce niveau de garantie individuelle sans trop dégrader le bien-être collectif.
+    \end{itemize}
+\end{itemize}
+
+\section{Conclusion}
+
+En définitive, ce projet démontre qu'il n'y a pas d'algorithme "magique" ou parfait pour résoudre le problème des mariages stables. Le choix d'une méthode d'affectation relève avant tout d'un choix politique et institutionnel :
+
+\begin{itemize}
+    \item Si l'institution veut éviter à tout prix les contestations étudiantes : il faut choisir l'algorithme de \textbf{Gale-Shapley}.
+    \item Si l'institution souhaite maximiser le bonheur global de la promotion avec un filet de sécurité : il faut choisir le \textbf{PLNE Top-$k$}.
+\end{itemize}
 
 \end{document}

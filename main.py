@@ -1,4 +1,5 @@
 from fonctions import *
+from solveur import *
 
 if __name__ == "__main__":
     # 1. Lecture des fichiers de préférences

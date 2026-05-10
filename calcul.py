@@ -66,7 +66,7 @@ def tracer_courbe(type):
     plt.figure()
     plt.plot(valeurs_n, temps_moyens, marker='o')
 
-    plt.title(f"Temps de calcul de Gale_Shapley_{type} en fonction du nombre n d'étudiants (n)")
+    plt.title(f"Temps de calcul {type} en fonction du nombre n d'étudiants (n)")
     plt.xlabel("Nombre d'étudiants (n)")
     plt.ylabel("Temps moyen d'exécution (secondes)")
     plt.grid(True)
@@ -111,7 +111,7 @@ def tracer_courbe_iterations(type):
     plt.figure()
     plt.plot(valeurs_n, iterations_moyennes, marker='o')
 
-    plt.title(f"Nombre d'itérations de Gale_Shapley_{type} en fonction du nombre n d'étudiants (n)")
+    plt.title(f"Nombre d'itérations {type} en fonction du nombre n d'étudiants (n)")
     plt.xlabel("Nombre d'étudiants (n)")
     plt.ylabel("Nombre moyen d'itérations")
     plt.grid(True)
@@ -124,7 +124,7 @@ def tracer_courbe_iterations(type):
     plt.show()
     
 if __name__ == "__main__":
-    tracer_courbe("cote_etudiant")
+    #tracer_courbe("cote_etudiant")
     tracer_courbe("cote_parcours")
     tracer_courbe("test")
     
